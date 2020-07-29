@@ -1,0 +1,16 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{000462C9-08D8-2A77-F98F-96F84BABBD0C}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "TrafficLight",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
+		}
+	]
+}
