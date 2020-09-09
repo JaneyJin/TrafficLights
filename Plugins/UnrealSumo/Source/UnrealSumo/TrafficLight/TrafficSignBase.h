@@ -7,14 +7,19 @@
 #include "TrafficSignBase.generated.h"
 
 UCLASS()
-class TRAFFICLIGHT_API ATrafficSignBase : public AActor
+class UNREALSUMO_API ATrafficSignBase : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ATrafficSignBase(const FObjectInitializer &ObjectInitializer);
+	// ATrafficSignBase();
+    ATrafficSignBase(const FObjectInitializer &ObjectInitializer);
 
+
+//protected:
+//	// Called when the game starts or when spawned
+//	virtual void BeginPlay() override;
 
 	
 	

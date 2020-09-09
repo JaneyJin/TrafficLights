@@ -3,20 +3,28 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "TrafficLights/TrafficSignBase.h"
-#include "TrafficLights/TrafficLightState.h"
+#include "TrafficSignBase.h"
+#include "TrafficLightState.h"
 #include "TrafficLightBase.generated.h"
 
-/**
- * 
- */
+class USumoGameInstance;
+
 UCLASS()
-class TRAFFICLIGHT_API ATrafficLightBase : public ATrafficSignBase
+class UNREALSUMO_API ATrafficLightBase : public ATrafficSignBase
 {
 	GENERATED_BODY()
 
+
 public:
     ATrafficLightBase(const FObjectInitializer &ObjectInitializer);
+
+
+    /**
+     * Override default BeginPlay function. Called when the game starts or when objects are spawned
+     */
+    virtual void BeginPlay() override;
+
+    void OnConstruction(const FTransform &Transform);
 
     virtual void Tick(float DeltaSeconds) override;
 
@@ -65,6 +73,10 @@ public:
     UFUNCTION(Category = "Traffic Light", BlueprintCallable)
     void SetTimeIsFrozen(bool InTimeIsFrozen);
 
+
+    // Shared custom GameInstance class. Variables in SumoGameInstance are modified in SumoGameMode.
+    USumoGameInstance* SumoGameInstance;
+
 protected:
     // virtual void OnConstruction(const FTransform &Transform) override;
     UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
@@ -72,6 +84,9 @@ protected:
 
 
 private:
+    std::vector<std::pair<char,double>> FirstTrafficLightLogic;
+
+
     UPROPERTY(Category = "Traffic Light", EditAnywhere)
     ETrafficLightState State = ETrafficLightState::Red;
 
@@ -92,4 +107,22 @@ private:
     UPROPERTY(Category = "Traffic Light", EditAnywhere)
     bool TimeIsFrozen = false;
 
+    UPROPERTY(Category = "Traffic Light", EditAnywhere)
+    double GreenTick = 0;
+
+    UPROPERTY(Category = "Traffic Light", EditAnywhere)
+    double YellowTick = 0;
+
+
+    UPROPERTY(Category = "Traffic Light", EditAnywhere)
+    double RedTick = 0;
+
+    char ExtractLightState(std::string TL_State, int TL_Group);
+
+    void TickByMachineTime(float DeltaSeconds);
+
+    void TickByCount();
+
+    UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
+    double ElapsedTick = 0;
 };
