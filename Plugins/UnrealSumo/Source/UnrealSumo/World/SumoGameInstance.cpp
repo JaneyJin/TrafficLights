@@ -10,13 +10,12 @@ USumoGameInstance::USumoGameInstance(const FObjectInitializer& ObjectInitializer
     EgoWheeledVehicleId = "";
 }
 
-void USumoGameInstance::SetSumoGameInstance(Client* c, FString v_id, bool SynBySumoTrafficLight) {
+void USumoGameInstance::SetSumoGameInstance(Client* c, FString v_id, bool SynBySumoTrafficLight ) {
     this->client = c;
     this->EgoWheeledVehicleId = v_id;
     this->ArrivedNumber = -1;
 
     this->SumoTrafficLightSyn = SynBySumoTrafficLight;
-
     UE_LOG(LogTemp, Warning, TEXT("# of tick between SUMOUpdate: %d"), SUMOToUnrealFrameRate.UETickBetweenSUMOUpdates)
 }
 

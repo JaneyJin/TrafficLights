@@ -28,7 +28,7 @@ enum class ETrafficLightController : uint8 {
 UCLASS()
 class UNREALSUMO_API ASumoGameMode : public AGameMode
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 private:
     /// Variables modified in BeginPlay()

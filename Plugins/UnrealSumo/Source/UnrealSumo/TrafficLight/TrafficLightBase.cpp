@@ -3,8 +3,9 @@
 
 #include "TrafficLightBase.h"
 #include "UnrealSumo/World/SumoGameMode.h"
-#include "Engine/World.h"
 #include "UnrealSumo/World/SumoGameInstance.h"
+#include "TrafficLightGroup.h"
+#include "Engine/World.h"
 #include "UnrealSumo/src/TraCIDefs.h"
 
 
@@ -16,67 +17,17 @@ ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer
 
 void ATrafficLightBase::BeginPlay() {
     Super::BeginPlay();
+    ASumoGameMode* GameMode = Cast<ASumoGameMode>(GetWorld()->GetAuthGameMode());
 
-//    // Require SumoGameMode to setup SumoGameInstance and then get SumoGameInstance in TrafficLightBase BeginPlay
-//    ASumoGameMode* GameMode = Cast<ASumoGameMode>(GetWorld()->GetAuthGameMode());
-//    if(!GameMode->HasActorBegunPlay()){
-//        GameMode->DispatchBeginPlay();
-//    }
-//    UE_LOG(LogTemp, Error, TEXT("TrafficLightBase BeginPlay"))
-//
-//    SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
-//    if(SumoGameInstance->client){
-//
-//        std::vector<libsumo::TraCILogic> SumoTL_Logic = SumoGameInstance->client->trafficlights.getAllProgramLogics("gneJ8");
-//
-//        std::vector<libsumo::TraCIPhase*>  TL_Phases = SumoTL_Logic[0].phases;
-//        for(int i = 0; i < TL_Phases.size(); i++){
-//            FirstTrafficLightLogic.push_back({ ExtractLightState(TL_Phases[i]->state, 0), TL_Phases[i]->duration });
-//        }
-//
-//        char InitialStateCharacter = FirstTrafficLightLogic.at(0).first;
-//        if(InitialStateCharacter == 'r' ){
-//            SetTrafficLightState(ETrafficLightState::Red);
-//
-//        }else if(InitialStateCharacter == 'y'){
-//            SetTrafficLightState(ETrafficLightState::Yellow);
-//        }else if(InitialStateCharacter == 'g'){
-//            SetTrafficLightState(ETrafficLightState::Green);
-//        }
-//
-//        for(int i = 0; i < FirstTrafficLightLogic.size(); i++){
-//
-//            if(FirstTrafficLightLogic.at(i).first == 'r' ){
-//                RedTick += FirstTrafficLightLogic.at(i).second * SumoGameInstance->SUMOToUnrealFrameRate.SUMOFPS;
-//            }else if(FirstTrafficLightLogic.at(i).first == 'y'){
-//                YellowTick += FirstTrafficLightLogic.at(i).second * SumoGameInstance->SUMOToUnrealFrameRate.SUMOFPS;
-//            }else if(FirstTrafficLightLogic.at(i).first == 'g'){
-//                GreenTick += FirstTrafficLightLogic.at(i).second * SumoGameInstance->SUMOToUnrealFrameRate.SUMOFPS;
-//            }
-//
-//        }
-//        UE_LOG(LogTemp, Warning, TEXT("%f, %f, %f"),RedTick, YellowTick, GreenTick)
-//
-//    }
-
-}
-char ATrafficLightBase::ExtractLightState(std::string TL_State, int TL_Group){
-    int group = 0;
-    for(int i = 0; i < TL_State.length(); i++){
-        int j = i + 1;
-        char left = tolower(TL_State.at(i));
-        char right = tolower(TL_State.at(j));
-        if(left != right ){
-            if(group == TL_Group){
-                return left;
-            }
-            group++;
-        }
-
+    if(!GameMode->HasActorBegunPlay()){
+        GameMode->DispatchBeginPlay();
     }
 
-    return '\0';
+
+    SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
+
 }
+
 void ATrafficLightBase::OnConstruction(const FTransform &Transform)
 {
     Super::OnConstruction(Transform);
@@ -87,13 +38,13 @@ void ATrafficLightBase::Tick(float DeltaSeconds)
 {
     // TickByMachineTime(DeltaSeconds);
 
-//    if (SumoGameInstance && !SumoGameInstance->SUMOToUnrealFrameRate.UnrealTickSlower) {
-//        if (SumoGameInstance->SUMOToUnrealFrameRate.TickCount == SumoGameInstance->SUMOToUnrealFrameRate.UETickBetweenSUMOUpdates) {
-//
-//            UE_LOG(LogTemp, Warning, TEXT("ATrafficLightBase -> Tick() %d. Update from SUMo."), SumoGameInstance->SUMOToUnrealFrameRate.TickCount)
-//            TickByCount();
-//        }
-//    }
+    if (SumoGameInstance && !SumoGameInstance->SUMOToUnrealFrameRate.UnrealTickSlower) {
+        if (SumoGameInstance->SUMOToUnrealFrameRate.TickCount == SumoGameInstance->SUMOToUnrealFrameRate.UETickBetweenSUMOUpdates) {
+
+            UE_LOG(LogTemp, Warning, TEXT("ATrafficLightBase -> Tick() %d. Update from SUMo."), SumoGameInstance->SUMOToUnrealFrameRate.TickCount)
+            TickByCount();
+        }
+    }
 }
 
 
@@ -114,7 +65,7 @@ void ATrafficLightBase::TickByCount(){
             ChangeTick = GreenTick;
             break;
         default:
-        UE_LOG(LogTemp, Error, TEXT("Invalid traffic light state!"));
+            UE_LOG(LogTemp, Error, TEXT("Invalid traffic light state!"));
             SetTrafficLightState(ETrafficLightState::Red);
             return;
     }
@@ -144,7 +95,7 @@ void ATrafficLightBase::TickByMachineTime(float DeltaSeconds) {
             ChangeTime = GreenTime;
             break;
         default:
-        UE_LOG(LogTemp, Error, TEXT("Invalid traffic light state!"));
+            UE_LOG(LogTemp, Error, TEXT("Invalid traffic light state!"));
             SetTrafficLightState(ETrafficLightState::Red);
             return;
     }
@@ -260,4 +211,56 @@ void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
     {
         ElapsedTime = 0.0f;
     }
+}
+
+//TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
+//{
+//  UTrafficLightComponent* TrafficLightComponent =
+//      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
+//
+//  if(TrafficLightComponent) {
+//    TArray<ATrafficLightBase *> result;
+//
+//    ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
+//    check(Group)
+//
+//    for(auto& Controller : Group->GetControllers())
+//    {
+//      for(auto& TLComp : Controller->GetTrafficLights())
+//      {
+//        result.Add(Cast<ATrafficLightBase>(TLComp->GetOwner()));
+//      }
+//    }
+//
+//    return result;
+//  }
+//  return GroupTrafficLights;
+//}
+//
+//void ATrafficLightBase::SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights)
+//{
+//  GroupTrafficLights = InGroupTrafficLights;
+//}
+
+
+void ATrafficLightBase::TrafficLightInitialization(FString InTrafficLightName, char InState,double RTick, double YTick, double GTick){
+
+
+    if(InState == 'r' ){
+        SetTrafficLightState(ETrafficLightState::Red);
+        UE_LOG(LogTemp, Warning, TEXT("Red"))
+    }else if(InState == 'y'){
+        SetTrafficLightState(ETrafficLightState::Yellow);
+        UE_LOG(LogTemp, Warning, TEXT("YEllow"))
+    }else if(InState == 'g'){
+        SetTrafficLightState(ETrafficLightState::Green);
+        UE_LOG(LogTemp, Warning, TEXT("Green"))
+    }
+    this->TrafficLightID = InTrafficLightName;
+    this->RedTick = RTick;
+    this->YellowTick = YTick;
+    this->GreenTick = GTick;
+
+    UE_LOG(LogTemp, Error, TEXT("%s, %f, %f, %f"),*InTrafficLightName, RTick, YTick, GTick)
+
 }

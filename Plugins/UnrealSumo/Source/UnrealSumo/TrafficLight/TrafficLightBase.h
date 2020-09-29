@@ -77,6 +77,14 @@ public:
     // Shared custom GameInstance class. Variables in SumoGameInstance are modified in SumoGameMode.
     USumoGameInstance* SumoGameInstance;
 
+//    UFUNCTION(Category = "Traffic Light", BlueprintCallable)
+//    TArray<ATrafficLightBase *> GetGroupTrafficLights() const;
+//
+//    UFUNCTION(Category = "Traffic Light", BlueprintCallable)
+//    void SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights);
+
+    void TrafficLightInitialization(FString InTrafficLightName, char InState,double RTick, double YTick, double GTick);
+
 protected:
     // virtual void OnConstruction(const FTransform &Transform) override;
     UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
@@ -84,7 +92,7 @@ protected:
 
 
 private:
-    std::vector<std::pair<char,double>> FirstTrafficLightLogic;
+    // std::vector<std::pair<char,double>> FirstTrafficLightLogic;
 
 
     UPROPERTY(Category = "Traffic Light", EditAnywhere)
@@ -104,20 +112,13 @@ private:
     UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
     float ElapsedTime = 0.0f;
 
-    UPROPERTY(Category = "Traffic Light", EditAnywhere)
     bool TimeIsFrozen = false;
 
-    UPROPERTY(Category = "Traffic Light", EditAnywhere)
     double GreenTick = 0;
-
-    UPROPERTY(Category = "Traffic Light", EditAnywhere)
     double YellowTick = 0;
-
-
-    UPROPERTY(Category = "Traffic Light", EditAnywhere)
     double RedTick = 0;
 
-    char ExtractLightState(std::string TL_State, int TL_Group);
+    FString TrafficLightID;
 
     void TickByMachineTime(float DeltaSeconds);
 
