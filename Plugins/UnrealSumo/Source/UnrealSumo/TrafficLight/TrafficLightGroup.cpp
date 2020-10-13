@@ -5,6 +5,8 @@
 #include "TrafficLightBase.h"
 #include "UnrealSumo/World/SumoGameMode.h"
 #include "UnrealSumo/World/SumoGameInstance.h"
+#include "Engine.h"
+#include <algorithm>
 
 // Sets default values
 ATrafficLightGroup::ATrafficLightGroup()
@@ -24,9 +26,22 @@ void ATrafficLightGroup::BeginPlay()
         GameMode->DispatchBeginPlay();
     }
 
-    SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
+    if(!GameMode->SynBySUMOTrafficLight()){
+//        if(TrafficLightReference.Num() > 0) {
+//            for (int Group = 0; Group < TrafficLightReference.Num(); Group++) {
+//                ATrafficLightBase* tl = TrafficLightReference[Group];
+//
+//                // TODO: Setup traffic light duration through user interface
+//                tl->SetTrafficLightState(ETrafficLightState::Red);
+//            }
+//        }
+        return;
+    }
 
-    if(SumoGameInstance->client){
+    SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
+    if(SumoGameInstance && SumoGameInstance->client){
+
+        ValidateJunctionID(JunctionID);
         std::vector<libsumo::TraCILogic> SumoTL_Logic = SumoGameInstance->client->trafficlights.getAllProgramLogics(TCHAR_TO_UTF8(*JunctionID));
         if(TrafficLightReference.Num() > 0){
             for (int Group = 0;Group < TrafficLightReference.Num();Group++)
@@ -60,12 +75,7 @@ void ATrafficLightGroup::BeginPlay()
 
             }
         }
-
-
     }
-//
-//
-
 
 }
 
@@ -97,4 +107,15 @@ char ATrafficLightGroup::ExtractLightState(std::string TL_State, int TL_Group){
     }
 
     return '\0';
+}
+
+void ATrafficLightGroup::ValidateJunctionID(FString InputJunctionID){
+    std::vector<std::string> TrafficLightList= SumoGameInstance->client->trafficlights.getIDList();
+    if (std::find(TrafficLightList.begin(), TrafficLightList.end(), std::string(TCHAR_TO_UTF8(*InputJunctionID))) != TrafficLightList.end()){
+         return;
+    }
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Traffic light Junction ID %s is invalid. Assign a valid ID %s for it."), *JunctionID, *FString(TrafficLightList[0].c_str())));
+
+    this->JunctionID = FString(TrafficLightList[0].c_str());
+
 }

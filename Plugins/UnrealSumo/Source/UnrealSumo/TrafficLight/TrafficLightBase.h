@@ -85,15 +85,16 @@ public:
 
     void TrafficLightInitialization(FString InTrafficLightName, char InState,double RTick, double YTick, double GTick);
 
-protected:
+
     // virtual void OnConstruction(const FTransform &Transform) override;
-    UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
+    // UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
+    UFUNCTION(Category = "Traffic Light", BlueprintCallable)
     void OnTrafficLightStateChanged(ETrafficLightState TrafficLightState);
 
 
 private:
     // std::vector<std::pair<char,double>> FirstTrafficLightLogic;
-
+    bool SynBySUMO = true;
 
     UPROPERTY(Category = "Traffic Light", EditAnywhere)
     ETrafficLightState State = ETrafficLightState::Red;
@@ -119,11 +120,19 @@ private:
     double RedTick = 0;
 
     FString TrafficLightID;
+    double ElapsedTick = 0;
+
+    UStaticMeshComponent* RedLight;
+    UStaticMeshComponent* GreenLight;
+    UStaticMeshComponent* YellowLight;
 
     void TickByMachineTime(float DeltaSeconds);
 
     void TickByCount();
 
-    UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
-    double ElapsedTick = 0;
+
+    void SetTrafficLightMeshComponent();
+
+    void SetTrafficLightMaterials(UStaticMeshComponent* OnTrafficLights,  const TCHAR * OnMaterialPath, TArray<UStaticMeshComponent*> OffStreetLights, const TCHAR * OffMaterialPath);
+
 };

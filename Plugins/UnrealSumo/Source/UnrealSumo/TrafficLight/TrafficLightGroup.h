@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include <string>
 #include "TrafficLightGroup.generated.h"
 
 class ATrafficLightBase;
@@ -38,4 +39,5 @@ private:
     USumoGameInstance* SumoGameInstance;
 
 
+    void ValidateJunctionID(FString ID);
 };

@@ -7,6 +7,8 @@
 #include "TrafficLightGroup.h"
 #include "Engine/World.h"
 #include "UnrealSumo/src/TraCIDefs.h"
+#include "Materials/MaterialInstance.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 
 ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer)
@@ -17,12 +19,20 @@ ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer
 
 void ATrafficLightBase::BeginPlay() {
     Super::BeginPlay();
+
+
     ASumoGameMode* GameMode = Cast<ASumoGameMode>(GetWorld()->GetAuthGameMode());
 
     if(!GameMode->HasActorBegunPlay()){
         GameMode->DispatchBeginPlay();
     }
 
+    SetTrafficLightMeshComponent();
+
+    if(!GameMode->SynBySUMOTrafficLight()){
+        SynBySUMO = false;
+        return;
+    }
 
     SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
 
@@ -31,19 +41,24 @@ void ATrafficLightBase::BeginPlay() {
 void ATrafficLightBase::OnConstruction(const FTransform &Transform)
 {
     Super::OnConstruction(Transform);
+    SetTrafficLightMeshComponent();
     SetTrafficLightState(State);
 }
 
 void ATrafficLightBase::Tick(float DeltaSeconds)
 {
-    // TickByMachineTime(DeltaSeconds);
 
-    if (SumoGameInstance && !SumoGameInstance->SUMOToUnrealFrameRate.UnrealTickSlower) {
-        if (SumoGameInstance->SUMOToUnrealFrameRate.TickCount == SumoGameInstance->SUMOToUnrealFrameRate.UETickBetweenSUMOUpdates) {
+    if (!SynBySUMO) {
+        TickByMachineTime(DeltaSeconds);
+        return;
+    }
 
-            UE_LOG(LogTemp, Warning, TEXT("ATrafficLightBase -> Tick() %d. Update from SUMo."), SumoGameInstance->SUMOToUnrealFrameRate.TickCount)
-            TickByCount();
-        }
+    if (SumoGameInstance == nullptr || SumoGameInstance->SUMOToUnrealFrameRate.UnrealTickSlower) {
+        return;
+    }
+
+    if(SumoGameInstance->SUMOToUnrealFrameRate.TickCount == SumoGameInstance->SUMOToUnrealFrameRate.UETickBetweenSUMOUpdates){
+        TickByCount();
     }
 }
 
@@ -103,6 +118,7 @@ void ATrafficLightBase::TickByMachineTime(float DeltaSeconds) {
     if (ElapsedTime > ChangeTime)
     {
         SwitchTrafficLightState();
+        ElapsedTime = 0.0f;
     }
 
 }
@@ -129,15 +145,14 @@ void ATrafficLightBase::SwitchTrafficLightState()
 void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState) {
     FString NextState = UEnum::GetValueAsString(InState);
     FString CurrentState = UEnum::GetValueAsString(State);
-    UE_LOG(LogTemp, Warning, TEXT("Time: %f; Current State: %s; Next State: %s"), ElapsedTime, *CurrentState, *NextState);
-
-    ElapsedTime = 0.0f;
+    UE_LOG(LogTemp, Warning, TEXT("%s -> Time: %f; Current State: %s; Next State: %s"), *GetName(),ElapsedTime, *CurrentState, *NextState);
     State = InState;
-    //TODO
 
+    OnTrafficLightStateChanged(State);
+
+    //TODO
     // SetTrafficSignState(ToTrafficSignState(State));
     // VehicleController
-    OnTrafficLightStateChanged(State);
 }
 
 // Change TrafficSignBase
@@ -154,6 +169,78 @@ void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState) {
 //            return ETrafficSignState::TrafficLightRed;
 //    }
 //}
+
+void ATrafficLightBase::SetTrafficLightMeshComponent(){
+    TArray<UStaticMeshComponent*> Components;
+    this->GetComponents<UStaticMeshComponent>(Components);
+
+    for(int32 i=0; i < Components.Num(); i++) //Count is zero
+    {
+        UStaticMeshComponent* StaticMeshComponent = Components[i];
+        FString StaticMeshName = StaticMeshComponent->GetName();
+        if(StaticMeshName.Contains("Red")){
+            RedLight = StaticMeshComponent;
+        }else if(StaticMeshName.Contains("Yellow")){
+            YellowLight = StaticMeshComponent;
+        }else if(StaticMeshName.Contains("Green")){
+            GreenLight = StaticMeshComponent;
+        }
+    }
+
+}
+
+
+void ATrafficLightBase::OnTrafficLightStateChanged(ETrafficLightState TrafficLightState) {
+    TArray<UStaticMeshComponent*> OffStreetLights;
+    FString OnMaterial;
+    FString OffMaterial = TEXT("MaterialInstanceConstant'/UnrealSumo/TrafficLightSign/Static/MI_StreetLightsOff.MI_StreetLightsOff'");
+    switch (TrafficLightState)
+    {
+        case ETrafficLightState::Red:
+            OffStreetLights.Add(YellowLight);
+            OffStreetLights.Add(GreenLight);
+            OnMaterial = TEXT("MaterialInstanceConstant'/UnrealSumo/TrafficLightSign/Static/MI_Streetlights_Red.MI_Streetlights_Red'");
+            SetTrafficLightMaterials(RedLight, *OnMaterial, OffStreetLights, *OffMaterial);
+            break;
+        case ETrafficLightState::Yellow:
+            OffStreetLights.Add(RedLight);
+            OffStreetLights.Add(GreenLight);
+            OnMaterial = TEXT("MaterialInstanceConstant'/UnrealSumo/TrafficLightSign/Static/MI_Streetlights_Yellow.MI_Streetlights_Yellow'");
+            SetTrafficLightMaterials(YellowLight, *OnMaterial, OffStreetLights, *OffMaterial);
+            break;
+        case ETrafficLightState::Green:
+            OffStreetLights.Add(RedLight);
+            OffStreetLights.Add(YellowLight);
+            OnMaterial = TEXT("MaterialInstanceConstant'/UnrealSumo/TrafficLightSign/Static/MI_Streetlights_Green.MI_Streetlights_Green'");
+            SetTrafficLightMaterials(GreenLight, *OnMaterial, OffStreetLights, *OffMaterial);
+            break;
+        default:
+        UE_LOG(LogTemp, Error, TEXT("Invalid traffic light state!"));
+            SetTrafficLightState(ETrafficLightState::Red);
+            return;
+    }
+}
+
+void ATrafficLightBase::SetTrafficLightMaterials(UStaticMeshComponent* OnTrafficLights, const TCHAR * OnMaterialPath,
+        TArray<UStaticMeshComponent*> OffStreetLights, const TCHAR * OffMaterialPath){
+
+    UMaterialInstanceConstant* FoundMaterial;
+    if(OnTrafficLights){
+        FoundMaterial = LoadObject<UMaterialInstanceConstant>(nullptr, OnMaterialPath);
+        if (FoundMaterial){
+            OnTrafficLights->SetMaterial(1,FoundMaterial);
+        }
+    }
+
+    for(int32 i = 0; i < OffStreetLights.Num(); i++){
+        FoundMaterial = LoadObject<UMaterialInstanceConstant>(nullptr, OffMaterialPath);
+        if(OffStreetLights[i] && FoundMaterial) {
+            OffStreetLights[i]->SetMaterial(1, FoundMaterial);
+        }
+    }
+}
+
+
 
 // Getter
 float ATrafficLightBase::GetGreenTime() const
@@ -245,13 +332,12 @@ void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
 
 void ATrafficLightBase::TrafficLightInitialization(FString InTrafficLightName, char InState,double RTick, double YTick, double GTick){
 
-
     if(InState == 'r' ){
         SetTrafficLightState(ETrafficLightState::Red);
         UE_LOG(LogTemp, Warning, TEXT("Red"))
     }else if(InState == 'y'){
         SetTrafficLightState(ETrafficLightState::Yellow);
-        UE_LOG(LogTemp, Warning, TEXT("YEllow"))
+        UE_LOG(LogTemp, Warning, TEXT("Yellow"))
     }else if(InState == 'g'){
         SetTrafficLightState(ETrafficLightState::Green);
         UE_LOG(LogTemp, Warning, TEXT("Green"))
@@ -261,6 +347,6 @@ void ATrafficLightBase::TrafficLightInitialization(FString InTrafficLightName, c
     this->YellowTick = YTick;
     this->GreenTick = GTick;
 
-    UE_LOG(LogTemp, Error, TEXT("%s, %f, %f, %f"),*InTrafficLightName, RTick, YTick, GTick)
+    UE_LOG(LogTemp, Display, TEXT("%s, %f, %f, %f"),*InTrafficLightName, RTick, YTick, GTick)
 
 }

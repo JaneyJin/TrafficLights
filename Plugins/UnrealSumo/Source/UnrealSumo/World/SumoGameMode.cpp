@@ -46,10 +46,8 @@ void ASumoGameMode::BeginPlay() {
         if (!SetupGameInstance()) {
             GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Connection fail. Please set SumoGameInstance in the project setting before use.")));
         }
-
         // Validate FPS between Unreal and SUMO.
         MatchFrameRatePerSecond();
-
 
         /* APlayerController* PlayerController = UGameplayStatics::GetPlayerController(this, 0) //for singleplayer
         ASumoPlayerController* PlayerController = (ASumoPlayerController*)GetWorld()->GetFirstPlayerController();
@@ -120,9 +118,9 @@ void ASumoGameMode::Tick(float DeltaTime) {
         // UpdateSUMOByMachineTime();
 
     }
-    else {
-        UE_LOG(LogTemp, Warning, TEXT("Tick. Socket Close."))
-    }
+//    else {
+//        UE_LOG(LogTemp, Warning, TEXT("Tick. Socket Close."))
+//    }
 }
 
 bool ASumoGameMode::SetupGameInstance() {
@@ -134,24 +132,19 @@ bool ASumoGameMode::SetupGameInstance() {
 
         // FString EnumAsString = UEnum::GetValueAsString(TrafficLightSyn.GetValue());
         // UE_LOG(LogTemp, Error, TEXT("%s: %d"), *EnumAsString, TrafficLightSyn.GetValue())
-
-        if(TrafficLightSyn == ETrafficLightController::SumoTrafficLight){
-            SumoGameInstance->SetSumoGameInstance(&client, DefaultPawnClass->GetName(), true);
-            UE_LOG(LogTemp, Error, TEXT("Sumo TrafficLight"))
-
-        }else{
-            SumoGameInstance->SetSumoGameInstance(&client, DefaultPawnClass->GetName(), false);
-            UE_LOG(LogTemp, Error, TEXT("Unreal  TrafficLight"))
-        }
-
-
+        SumoGameInstance->SetSumoGameInstance(&client, DefaultPawnClass->GetName());
         return true;
     }
 
     return false;
 }
 
-
+bool ASumoGameMode::SynBySUMOTrafficLight(){
+    if(TrafficLightSyn == ETrafficLightController::SumoTrafficLight) {
+        return true;
+    }
+    return false;
+}
 void ASumoGameMode::UpdateFromSUMOByTickCount() {
 
     /* Fix Tick() rate to update vehicle from SUMO */

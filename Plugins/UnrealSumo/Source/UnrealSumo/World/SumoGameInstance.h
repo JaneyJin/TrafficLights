@@ -46,7 +46,7 @@ public:
      * @param  Reference to the endpoint for SUMO and Unreal commuinciation.
      * @param  Ego wheeled vehicle identity in Unreal and SUMO.
      */
-    void SetSumoGameInstance(Client* c, FString v_id, bool SynBySumoTrafficLight);
+    void SetSumoGameInstance(Client* c, FString v_id);
 
 
     /**

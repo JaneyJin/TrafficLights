@@ -122,7 +122,7 @@ public:
 
 
     /*UPROPERTY(EditAnywhere, Category = "SUMO Setup")
-        bool AllowSpawnEgoVehicle;
+    bool AllowSpawnEgoVehicle;
     UPROPERTY(EditAnywhere, Category = "SUMO Setup", meta = (editcondition = "AllowSpawnEgoVehicle"))
         TSubclassOf<AWheeledVehiclePawn> EgoWheeledVehicle;*/
 
@@ -132,7 +132,7 @@ public:
     FString RouteId;
 
     UPROPERTY(EditAnywhere, Category = "SUMO Setup", BlueprintReadWrite, meta = (ToolTip = "Traffic light controlled by SUMO or Unreal. Choose "))
-    TEnumAsByte<ETrafficLightController> TrafficLightSyn;
+    ETrafficLightController TrafficLightSyn;
 
 
     /**
@@ -160,6 +160,7 @@ public:
     virtual bool CanEditChange(const UProperty* InProperty) const override;
 #endif
 
+    bool SynBySUMOTrafficLight();
 
     // NOT USED
     /// Variables modified in UpdateSUMOByMachineTime()
