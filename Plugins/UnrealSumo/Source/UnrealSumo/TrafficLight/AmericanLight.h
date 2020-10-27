@@ -9,28 +9,28 @@
 #include "Engine/Texture2D.h"   // TODO: DELETE
 #include "AmericanLight.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType, Category = "AmericanLights")
 struct FTrafficLightPieces
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     UStaticMesh* Mesh;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     FTransform RelativeTransform;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     ETrafficLightState LightColor;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     bool Masked;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     UTexture2D* Mask;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     float Rotation;
 
     FTrafficLightPieces(){
@@ -46,20 +46,20 @@ public:
 
 };
 
-USTRUCT()
+USTRUCT(blueprintable, Category = "AmericanLights")
 struct FTrafficLightStruct
 {
     GENERATED_BODY()
 
 public:
-    UPROPERTY(EditAnywhere)
-    TArray<FTrafficLightPieces> Lights;
-
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     FString Description;
 
-    UPROPERTY(EditAnywhere)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
     FTransform Position;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmericanLights")
+    TArray<FTrafficLightPieces> Lights;
 
     FTrafficLightStruct(){
         FTrafficLightPieces TLElement;
@@ -83,7 +83,6 @@ class UNREALSUMO_API AAmericanLight : public ATrafficSignBase
 public:
     AAmericanLight(const FObjectInitializer &ObjectInitializer);
 
-    UPROPERTY(VisibleAnywhere)
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AmericanLightsDetails")
     TArray<FTrafficLightStruct> Heads;
-
 };

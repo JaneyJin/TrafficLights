@@ -92,6 +92,9 @@ public:
     void OnTrafficLightStateChanged(ETrafficLightState TrafficLightState);
 
 
+    UFUNCTION(Category = "Traffic Light", BlueprintImplementableEvent)
+    void OnAmericanLightStateChanged(ETrafficLightState TrafficLightState);
+
 private:
     // std::vector<std::pair<char,double>> FirstTrafficLightLogic;
     bool SynBySUMO = true;

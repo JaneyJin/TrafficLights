@@ -67,6 +67,7 @@ void ASumoGameMode::BeginPlay() {
 
     }
     catch (tcpip::SocketException& e) {
+        TrafficLightSyn = ETrafficLightController::UnrealTrafficLight;
         UE_LOG(LogTemp, Error, TEXT("#Error while connecting: %s.\n"), e.what())
     }
 

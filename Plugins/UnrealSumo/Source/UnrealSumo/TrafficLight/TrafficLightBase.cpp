@@ -20,20 +20,23 @@ ATrafficLightBase::ATrafficLightBase(const FObjectInitializer &ObjectInitializer
 void ATrafficLightBase::BeginPlay() {
     Super::BeginPlay();
 
+    auto GameMode = GetWorld()->GetAuthGameMode();
+    if(!GameMode->GetName().Contains("SumoGameMode")){
+        SynBySUMO = false;
+        return;
+    }
 
-    ASumoGameMode* GameMode = Cast<ASumoGameMode>(GetWorld()->GetAuthGameMode());
-
+    ASumoGameMode* SumoGameMode = Cast<ASumoGameMode>(GameMode);
     if(!GameMode->HasActorBegunPlay()){
         GameMode->DispatchBeginPlay();
     }
 
     SetTrafficLightMeshComponent();
 
-    if(!GameMode->SynBySUMOTrafficLight()){
+    if(!SumoGameMode->SynBySUMOTrafficLight()){
         SynBySUMO = false;
         return;
     }
-
     SumoGameInstance = Cast<USumoGameInstance>(GetGameInstance());
 
 }
@@ -47,7 +50,6 @@ void ATrafficLightBase::OnConstruction(const FTransform &Transform)
 
 void ATrafficLightBase::Tick(float DeltaSeconds)
 {
-
     if (!SynBySUMO) {
         TickByMachineTime(DeltaSeconds);
         return;
@@ -149,7 +151,7 @@ void ATrafficLightBase::SetTrafficLightState(const ETrafficLightState InState) {
     State = InState;
 
     OnTrafficLightStateChanged(State);
-
+    OnAmericanLightStateChanged(State);
     //TODO
     // SetTrafficSignState(ToTrafficSignState(State));
     // VehicleController
@@ -186,9 +188,7 @@ void ATrafficLightBase::SetTrafficLightMeshComponent(){
             GreenLight = StaticMeshComponent;
         }
     }
-
 }
-
 
 void ATrafficLightBase::OnTrafficLightStateChanged(ETrafficLightState TrafficLightState) {
     TArray<UStaticMeshComponent*> OffStreetLights;
@@ -239,7 +239,6 @@ void ATrafficLightBase::SetTrafficLightMaterials(UStaticMeshComponent* OnTraffic
         }
     }
 }
-
 
 
 // Getter
@@ -300,47 +299,18 @@ void ATrafficLightBase::SetTimeIsFrozen(bool InTimeIsFrozen)
     }
 }
 
-//TArray<ATrafficLightBase *> ATrafficLightBase::GetGroupTrafficLights() const
-//{
-//  UTrafficLightComponent* TrafficLightComponent =
-//      Cast<UTrafficLightComponent>(FindComponentByClass<UTrafficLightComponent>());
-//
-//  if(TrafficLightComponent) {
-//    TArray<ATrafficLightBase *> result;
-//
-//    ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
-//    check(Group)
-//
-//    for(auto& Controller : Group->GetControllers())
-//    {
-//      for(auto& TLComp : Controller->GetTrafficLights())
-//      {
-//        result.Add(Cast<ATrafficLightBase>(TLComp->GetOwner()));
-//      }
-//    }
-//
-//    return result;
-//  }
-//  return GroupTrafficLights;
-//}
-//
-//void ATrafficLightBase::SetGroupTrafficLights(TArray<ATrafficLightBase *> InGroupTrafficLights)
-//{
-//  GroupTrafficLights = InGroupTrafficLights;
-//}
-
 
 void ATrafficLightBase::TrafficLightInitialization(FString InTrafficLightName, char InState,double RTick, double YTick, double GTick){
 
     if(InState == 'r' ){
         SetTrafficLightState(ETrafficLightState::Red);
-        UE_LOG(LogTemp, Warning, TEXT("Red"))
+        // UE_LOG(LogTemp, Warning, TEXT("Red"))
     }else if(InState == 'y'){
         SetTrafficLightState(ETrafficLightState::Yellow);
-        UE_LOG(LogTemp, Warning, TEXT("Yellow"))
+        // UE_LOG(LogTemp, Warning, TEXT("Yellow"))
     }else if(InState == 'g'){
         SetTrafficLightState(ETrafficLightState::Green);
-        UE_LOG(LogTemp, Warning, TEXT("Green"))
+        // UE_LOG(LogTemp, Warning, TEXT("Green"))
     }
     this->TrafficLightID = InTrafficLightName;
     this->RedTick = RTick;
